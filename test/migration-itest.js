@@ -3,7 +3,6 @@ var Migration = Mongration.Migration;
 var path = require('path');
 var chai = require('chai');
 var fs = require('fs');
-const util = require('util');
 
 var should = chai.should();
 var expect = chai.expect;
@@ -32,7 +31,7 @@ describe('Mongration.Migration', function() {
         new MongoConn(config).connect(function (err, _client) {
             should.not.exist(err);
             _client
-              .db('mydb')
+              .db(_client.s.options.dbName)
               .dropDatabase()
               .then(() => {
                 client = _client
