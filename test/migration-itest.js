@@ -24,21 +24,27 @@ describe('Mongration.Migration', function() {
     this.slow(2000);
 
     var client;
+    let dbName;
 
     beforeEach(function (done) {
         // clean db for each test
         new MongoConn(config).connect(function (err, _client) {
             should.not.exist(err);
-            _client.db(_client.s.options.dbName).dropDatabase(function (err, result) {
-                should.not.exist(err);
+            _client
+              .db(_client.s.options.dbName)
+              .dropDatabase()
+              .then(() => {
                 client = _client
                 done();
-            });
+              })
+              .catch(done);
         })
     });
 
     afterEach(function (done) {
-        client.close(done);
+        client.close()
+          .then(done)
+          .catch(done);
     });
 
     it('runs migration', function(done) {

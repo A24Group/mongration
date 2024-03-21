@@ -106,11 +106,11 @@ module.exports = {
     id: '1-step',
 
     up : function(db, cb){
-        db.collection('testcollection').insert({ name: 'initial-setup' }, cb);
+        db.collection('testcollection').insertOne({ name: 'initial-setup' }).then(cb).catch(cb);
     },
 
     down : function(db, cb){
-        db.collection('testcollection').remove({ name: 'initial-setup' }, cb);
+        db.collection('testcollection').deleteOne({ name: 'initial-setup' }).then(cb).catch(cb);
     }
 }
 ```
@@ -153,9 +153,9 @@ module.exports = {
     up : function(db, cb){
         async.series(
             [
-                function(_cb){db.collection('testcollection').insert({ name: 'initial-setup' }, _cb)},
-                function(_cb){db.collection('othercollection').insert({ name: 'second-setup' }, _cb)},
-                function(_cb){db.collection('othercollection').insert({ name: 'third-setup' }, _cb)}
+                function(_cb){db.collection('testcollection').insertOne({ name: 'initial-setup' }).then(_cb).catch(_cb)},
+                function(_cb){db.collection('othercollection').insertOne({ name: 'second-setup' }).then(_cb).catch(_cb)},
+                function(_cb){db.collection('othercollection').insertOne({ name: 'third-setup' }).then(_cb).catch(_cb)},
             ],
             cb
         );  
@@ -236,7 +236,7 @@ It makes sure that previsouly ran migrations will be rerun on the same order and
 
 The migration state is saved on the **migrationCollection** defined on [configuration](#configuration):
 ```javascript
-db.migrationversion.find()
+db.migrationversion.find().toArray()
 { "id" : "1-simple-query-sample", "checksum" : "a10e3030bb9683a971bae1f95b986033", order : "0", "date" : ISODate("2015-12-18T14:28:38.149Z") }
 { "id" : "2-multi-parallel-query", "checksum" : "3999fbcdf95d4c4a06e839cd0c66ede5", order : "1", "date" : ISODate("2015-12-18T14:28:38.187Z") }
 { "id" : "3-multi-sequential-query", "checksum" : "1181db9b787251df92fd9fb676da2d76", order : "2", "date" : ISODate("2015-12-18T14:28:38.287Z") }
@@ -291,9 +291,9 @@ module.exports = {
     up : function(db, cb){
         async.series(
             [
-                function(cb){db.collection('testcollection').insert({ name: 'initial-sequential-setup' }, cb)},
-                function(cb){db.collection('testcollection').insert({ name: 'second-sequential-setup' }, cb)},
-                function(cb){db.collection('testcollection').insert({ name: 'third-sequential-setup' }, cb)}
+                function(cb){db.collection('testcollection').insertOne({ name: 'initial-sequential-setup' }).then(cb).catch(cb)},
+                function(cb){db.collection('testcollection').insertOne({ name: 'second-sequential-setup' }).then(cb).catch(cb)},
+                function(cb){db.collection('testcollection').insertOne({ name: 'third-sequential-setup' }).then(cb).catch(cb)}
             ],
             cb
         );
@@ -312,9 +312,9 @@ module.exports = {
     up : function(db, cb){
         async.parallel(
             [
-                function(cb){db.collection('testcollection').insert({ name: 'initial-parallel-setup' }, cb)},
-                function(cb){db.collection('testcollection').insert({ name: 'second-parallel-setup' }, cb)},
-                function(cb){db.collection('testcollection').insert({ name: 'third-parallel-setup' }, cb)}
+                function(cb){db.collection('testcollection').insertOne({ name: 'initial-parallel-setup' }).then(cb).catch(cb)},
+                function(cb){db.collection('testcollection').insertOne({ name: 'second-parallel-setup' }).then(cb).catch(cb)},
+                function(cb){db.collection('testcollection').insertOne({ name: 'third-parallel-setup' }).then(cb).catch(cb)}
             ],
             cb
         );

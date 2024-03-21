@@ -25,11 +25,9 @@ function Migration(dbConfig) {
 
 var validate = function(cb) {
     if(this.db){
-
-        this.db.collection(this.collection).find({}, {}).sort({order : 1}).toArray(function(err, docs){
-            assert.equal(err, null);
+        this.db.collection(this.collection).find({}, {}).sort({order : 1}).toArray()
+          .then((docs) => {
             var _steps = utilities.arrayToObject(this.steps, 'id');
-
             docs.forEach(function(dbStep, index){
                 if(this.steps[index]){
                     this.steps[index].status = statuses.skipped;   
@@ -51,7 +49,8 @@ var validate = function(cb) {
                 return step;
             });
             cb();
-        }.bind(this));
+          })
+          .catch(cb);
     }
 };
 
@@ -63,25 +62,25 @@ var rollback = function(cb, error) {
             return function(cb){
                 if(step.status === statuses.ok || step.status === statuses.error){
                     if(step.down){
-                        this.db.collection(this.collection).deleteOne({id : step.id}, function(err){
-                            if(err){
-                                step.status = statuses.rollbackError;
-                                return cb("[" + step.id + "] failed to remove migration version: " + err);
-                            }
-
+                      this.db.collection(this.collection).deleteOne({id : step.id})
+                        .then(() => {
                             step.down(this.db, function(err){
-                                if(err){
-                                    step.status = statuses.rollbackError;
-                                    return cb("[" + step.id + "] unable to rollback migration: " + err);
-                                }
+                              if(err){
+                                  step.status = statuses.rollbackError;
+                                  return cb("[" + step.id + "] unable to rollback migration: " + err);
+                              }
 
-                                if(step.status === statuses.ok){
-                                    step.status = statuses.rollback;
-                                }
-                                cb();
+                              if(step.status === statuses.ok){
+                                  step.status = statuses.rollback;
+                              }
+                              cb();
                             }.bind(this)
                             );
-                        }.bind(this));
+                        })
+                        .catch((err) => {
+                            step.status = statuses.rollbackError;
+                            cb("[" + step.id + "] failed to remove migration version: " + err);
+                        });
                     }else{
                         console.warn("[" + step.id + "] - Skipping rollback due to missing `down` property");
                         cb();
@@ -118,8 +117,10 @@ Migration.prototype.migrate = function(doneCb) {
                 status : step.status
             }
         });
-        this.client.close();
-        doneCb(err, resp);
+        this.client
+            .close()
+            .then(() => doneCb(err, resp))
+            .catch(() => doneCb(err, resp));
     }.bind(this);
 
     this.migrationFiles.forEach(function(path, index){
@@ -129,8 +130,9 @@ Migration.prototype.migrate = function(doneCb) {
     }.bind(this));
 
     new MongoConnection(this.dbConfig).connect(function(err, client){
-        assert.equal(err, null);        
+        assert.equal(err, null);
         this.client = client;
+
         this.db = client.db(client.s.options.dbName);
 
         validate.call(this, function(err){
@@ -150,14 +152,15 @@ Migration.prototype.migrate = function(doneCb) {
                                     return cb("[" + step.id + "] unable to complete migration: " + err);
                                 }
 
-                                this.db.collection(this.collection).insertOne(new StepVersionCollection(step.id, step.checksum, step.order, new Date()), function(err){
-                                    if(err){
+                                this.db.collection(this.collection).insertOne(new StepVersionCollection(step.id, step.checksum, step.order, new Date()))
+                                    .then(() => {
+                                        step.status = statuses.ok;
+                                        cb();
+                                    })
+                                    .catch((err) => {
                                         step.status = statuses.error;
-                                        return cb("[" + step.id + "] failed to save migration version: " + err);
-                                    }
-                                    step.status = statuses.ok;
-                                    cb();
-                                });
+                                        cb("[" + step.id + "] failed to save migration version: " + err);
+                                    });
                             }.bind(this));
                         }
                     }.bind(this)

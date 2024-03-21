@@ -1,6 +1,6 @@
 {
   "name": "mongration",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "description": "Node.js mongodb migration framework",
   "main": "index.js",
   "bin": {
@@ -13,6 +13,9 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/awapps/mongration.git"
+  },
+  "engines": {
+    "node": ">= 16.20.1"
   },
   "keywords": [
     "mongration",
@@ -33,7 +36,7 @@
     "console.table": "^0.10.0",
     "lodash": "^4.17.5",
     "md5": "~2.0.0",
-    "mongodb": "^4.14.0"
+    "mongodb": "^6.5.0"
   },
   "devDependencies": {
     "chai": "^4.1.2",
